@@ -12,7 +12,7 @@ from modules.netguardian import NetGuardian
 
 STYLE_SHEET = """
 QMainWindow {
-    background-color: #2b2b2b;
+    background-color: #1e1e1e;
 }
 
 QLabel {
@@ -24,106 +24,156 @@ QPushButton {
     background-color: #0d6efd;
     color: white;
     border: none;
-    padding: 8px 15px;
     border-radius: 4px;
+    padding: 1px 10px;
     font-size: 13px;
-    min-width: 100px;
+    font-weight: 500;
+    min-height: 25px;
 }
 
 QPushButton:hover {
     background-color: #0b5ed7;
 }
 
+QPushButton:pressed {
+    background-color: #0a58ca;
+}
+
 QPushButton:disabled {
     background-color: #6c757d;
+    opacity: 0.7;
 }
 
 QPushButton#controlBtn {
     background-color: #dc3545;
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 5px 15px;
 }
 
 QPushButton#controlBtn:hover {
-    background-color: #bb2d3b;
+    background-color: #c82333;
 }
 
 QTableWidget {
-    background-color: #353535;
-    color: white;
-    gridline-color: #454545;
-    border: none;
-    border-radius: 5px;
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    gridline-color: #404040;
+    border: 1px solid #404040;
+    border-radius: 10px;
     font-size: 13px;
+    selection-background-color: #264f78;
+    padding: 5px;
 }
 
 QTableWidget::item {
-    padding: 4px;
+    padding: 12px 8px;
+    border: none;
 }
 
 QTableWidget::item:selected {
-    background-color: #0d6efd;
+    background-color: #264f78;
+    color: white;
+}
+
+QTableWidget::item:hover {
+    background-color: #363636;
 }
 
 QHeaderView::section {
-    background-color: #404040;
-    color: white;
-    padding: 6px;
+    background-color: #252525;
+    color: #ffffff;
+    padding: 12px 8px;
     border: none;
     font-size: 13px;
     font-weight: bold;
+    border-bottom: 2px solid #404040;
+}
+
+QHeaderView::section:hover {
+    background-color: #2a2a2a;
+}
+
+QPushButton#tableControlBtn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    min-width: 60px;
+    font-size: 12px;
+}
+
+QPushButton#tableControlBtn:hover {
+    background-color: #c82333;
+}
+
+QPushButton#tableControlBtn:pressed {
+    background-color: #bd2130;
 }
 
 QFrame#statusFrame {
-    background-color: #353535;
-    border-radius: 4px;
-    max-height: 40px;
-    margin: 0px 5px;
+    background-color: #2d2d2d;
+    border-radius: 10px;
+    min-height: 60px;
+    margin: 5px;
+    padding: 0px 15px;
+    border: 1px solid #404040;
 }
 
 QLabel#statusTitle {
-    color: #adb5bd;
-    font-size: 12px;
-    padding: 0px 5px;
+    color: #8a8a8a;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 QLabel#statusLabel {
     font-weight: bold;
-    color: #0d6efd;
-    font-size: 12px;
-    padding: 0px 5px;
+    font-size: 14px;
 }
 
 QProgressBar {
     border: none;
-    background-color: #353535;
-    height: 2px;
-    border-radius: 1px;
+    background-color: #2d2d2d;
+    height: 4px;
+    border-radius: 2px;
 }
 
 QProgressBar::chunk {
     background-color: #0d6efd;
+    border-radius: 2px;
 }
 
 QLabel#loadingLabel {
     color: #ffc107;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
-QLabel[href] {
-    font-size: 12px;
+QLabel#tableTitle {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 0px;
 }
 
-QLabel[href]:hover {
-    color: #0d6efd;
-}
-t
 QLabel#githubLink {
-    color: #6c757d;
-    text-decoration: none;
+    color: #8a8a8a;
     font-size: 12px;
+    padding: 10px;
 }
 
 QLabel#githubLink:hover {
     color: #0d6efd;
+}
+
+QTableWidget {
+    padding: 10px;
+    border: 1px solid #404040;
+    border-radius: 10px;
+}
+
+QTableWidget::item {
+    border-bottom: 1px solid #404040;
 }
 """
 
@@ -171,20 +221,20 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowIcon(QIcon(get_icon_path('icon.ico')))
         self.setWindowTitle('NetGuardian Pro - ovftank')
-        self.setGeometry(100, 100, 900, 600)
+        self.setGeometry(100, 100, 1000, 600)
         self.setStyleSheet(STYLE_SHEET)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(20, 20, 20, 20)
 
         status_frame = QFrame()
         status_frame.setObjectName("statusFrame")
         status_layout = QHBoxLayout(status_frame)
-        status_layout.setContentsMargins(10, 0, 10, 0)
-        status_layout.setSpacing(5)
+        status_layout.setContentsMargins(20, 10, 20, 10)
+        status_layout.setSpacing(15)
 
         status_title = QLabel("Trạng thái:")
         status_title.setObjectName("statusTitle")
@@ -209,29 +259,38 @@ class MainWindow(QMainWindow):
         self.table.setSelectionBehavior(
             QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.table.setShowGrid(False)
+        self.table.setAlternatingRowColors(True)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setStyleSheet(self.table.styleSheet() + """
+            QTableWidget::item:alternate {
+                background-color: #333333;
+            }
+        """)
+        self.table.horizontalHeader().setMinimumSectionSize(80)
+        self.table.setColumnWidth(0, 60)
+        self.table.setColumnWidth(1, 150)
+        self.table.setColumnWidth(2, 180)
+        self.table.setColumnWidth(3, 200)
+        self.table.setColumnWidth(4, 120)
+        self.table.setColumnWidth(5, 120)
         main_layout.addWidget(self.table)
 
         control_layout = QHBoxLayout()
         control_layout.setSpacing(10)
+        control_layout.setContentsMargins(0, 10, 0, 10)
 
         btn_scan = QPushButton('Quét thiết bị')
         btn_scan.setToolTip('Quét tất cả thiết bị trong mạng')
         btn_scan.clicked.connect(self.start_scan)
 
-        self.btn_control = QPushButton('Chặn kết nối')
-        self.btn_control.setToolTip('Chặn kết nối của thiết bị được chọn')
-        self.btn_control.setObjectName("controlBtn")
-        self.btn_control.clicked.connect(self.toggle_control)
-        self.btn_control.setEnabled(False)
-
         self.btn_control_all = QPushButton('Chặn tất cả')
         self.btn_control_all.setToolTip('Chặn kết nối của tất cả thiết bị')
-        self.btn_control_all.setObjectName("controlBtn")
+        self.btn_control_all.setObjectName("tableControlBtn")
         self.btn_control_all.clicked.connect(self.toggle_control_all)
         self.btn_control_all.setEnabled(False)
 
         control_layout.addWidget(btn_scan)
-        control_layout.addWidget(self.btn_control)
         control_layout.addWidget(self.btn_control_all)
         control_layout.addStretch()
 
@@ -239,7 +298,7 @@ class MainWindow(QMainWindow):
 
         self.loading_frame = QFrame()
         loading_layout = QVBoxLayout(self.loading_frame)
-        loading_layout.setContentsMargins(0, 0, 0, 0)
+        loading_layout.setContentsMargins(20, 10, 20, 10)
         loading_layout.setSpacing(5)
 
         self.loading_label = QLabel("Đang quét thiết bị trong mạng...")
@@ -273,7 +332,6 @@ class MainWindow(QMainWindow):
         self.table.setRowCount(0)
         self.status_label.setText('Đang quét mạng...')
         self.status_label.setStyleSheet("color: #ffc107;")
-        self.btn_control.setEnabled(False)
 
         self.loading_frame.show()
         self.progress_bar.setValue(0)
@@ -311,7 +369,6 @@ class MainWindow(QMainWindow):
             self.status_label.setText('Quét hoàn tất')
             self.status_label.setStyleSheet("color: #28a745;")
             self.update_table()
-            self.btn_control.setEnabled(True)
             self.btn_control_all.setEnabled(True)
         except Exception as e:
             self.status_label.setText('Lỗi khi quét mạng')
@@ -321,46 +378,48 @@ class MainWindow(QMainWindow):
     def update_table(self):
         self.table.setRowCount(len(self.devices))
         for idx, device in enumerate(self.devices):
-            for col, value in enumerate([str(idx + 1), device['ip'],
-                                         device['mac'], device['hostname'],
-                                         device['status']]):
+            items = [
+                str(idx + 1),
+                device['ip'],
+                device['mac'],
+                device['hostname'],
+                device['status']
+            ]
+
+            for col, value in enumerate(items):
                 item = QTableWidgetItem(value)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                if col in [1, 2]:
+                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
                 self.table.setItem(idx, col, item)
 
             control_btn = QPushButton('Chặn')
-            control_btn.setObjectName("controlBtn")
-            control_btn.clicked.connect(lambda checked, ip=device['ip']:
-                                        self.toggle_device_control(ip))
-            self.table.setCellWidget(idx, 5, control_btn)
+            control_btn.setObjectName("tableControlBtn")
+            control_btn.clicked.connect(
+                lambda checked, ip=device['ip']: self.toggle_device_control(ip)
+            )
 
-        self.table.resizeColumnsToContents()
+            container = QWidget()
+            layout = QHBoxLayout(container)
+            layout.addWidget(control_btn)
+            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
 
-    def toggle_control(self):
-        if not self.control_thread or not self.control_thread.isRunning():
-            selected_items = self.table.selectedItems()
-            if not selected_items:
-                QMessageBox.warning(
-                    self, 'Thông báo', 'Vui lòng chọn thiết bị để chặn')
-                return
+            self.table.setCellWidget(idx, 5, container)
+            self.table.setRowHeight(idx, 55)
 
-            row = self.table.row(selected_items[0])
-            target_ip = self.table.item(row, 1).text()
+        self.table.setColumnWidth(0, 60)
+        self.table.setColumnWidth(1, 140)
+        self.table.setColumnWidth(2, 160)
+        self.table.setColumnWidth(3, 180)
+        self.table.setColumnWidth(4, 100)
+        self.table.setColumnWidth(5, 120)
 
-            self.control_thread = AttackThread(self.netcut, target_ip)
-            self.control_thread.start()
-
-            self.btn_control.setText('Dừng chặn')
-            self.status_label.setText(f'Đang chặn kết nối {target_ip}')
-            self.status_label.setStyleSheet("color: #dc3545;")
-        else:
-            self.control_thread.stop()
-            self.control_thread.quit()
-            self.control_thread.wait()
-
-            self.btn_control.setText('Chặn kết nối')
-            self.status_label.setText('Đã dừng chặn')
-            self.status_label.setStyleSheet("color: #28a745;")
+        self.table.setShowGrid(False)
+        self.table.setAlternatingRowColors(True)
+        self.table.horizontalHeader().setHighlightSections(False)
+        self.table.verticalHeader().setVisible(False)
 
     def toggle_control_all(self):
         if not self.control_thread or not self.control_thread.isRunning():
@@ -377,7 +436,7 @@ class MainWindow(QMainWindow):
             self.status_label.setText('Đang chặn tất cả thiết bị')
             self.status_label.setStyleSheet("color: #dc3545;")
 
-            self.btn_control.setEnabled(False)
+            self.btn_control_all.setEnabled(False)
         else:
             self.control_thread.stop()
             self.control_thread.quit()
@@ -387,7 +446,7 @@ class MainWindow(QMainWindow):
             self.status_label.setText('Đã dừng chặn')
             self.status_label.setStyleSheet("color: #28a745;")
 
-            self.btn_control.setEnabled(True)
+            self.btn_control_all.setEnabled(True)
 
     def toggle_device_control(self, ip):
         btn = self.sender()

