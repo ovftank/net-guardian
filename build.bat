@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --onefile --windowed --icon ".\icon.ico" --add-data ".\icon.ico;."  ".\main.py"

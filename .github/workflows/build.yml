@@ -37,7 +37,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --add-data "icon.ico;." --name=NetGuardian main.py
+          pyinstaller --noconfirm --onefile --windowed --icon "images/icon.ico" --add-data "images/icon.ico;images" --name=NetGuardian main.py
 
       - name: Move executable to root
         shell: pwsh

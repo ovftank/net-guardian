@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
                              QVBoxLayout, QWidget)
 
-from module import NetGuardian
+from modules.netguardian import NetGuardian
 
 STYLE_SHEET = """
 QMainWindow {
@@ -156,9 +156,9 @@ class AttackThread(QThread):
 
 def get_icon_path(icon_name):
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        return str(Path(sys._MEIPASS) / icon_name)
+        return str(Path(sys._MEIPASS) / 'images' / icon_name)
     else:
-        return str(Path(__file__).parent / icon_name)
+        return str(Path(__file__).parent / 'images' / icon_name)
 
 
 class MainWindow(QMainWindow):
@@ -215,14 +215,17 @@ class MainWindow(QMainWindow):
         control_layout.setSpacing(10)
 
         btn_scan = QPushButton('Quét thiết bị')
+        btn_scan.setToolTip('Quét tất cả thiết bị trong mạng')
         btn_scan.clicked.connect(self.start_scan)
 
         self.btn_control = QPushButton('Chặn kết nối')
+        self.btn_control.setToolTip('Chặn kết nối của thiết bị được chọn')
         self.btn_control.setObjectName("controlBtn")
         self.btn_control.clicked.connect(self.toggle_control)
         self.btn_control.setEnabled(False)
 
         self.btn_control_all = QPushButton('Chặn tất cả')
+        self.btn_control_all.setToolTip('Chặn kết nối của tất cả thiết bị')
         self.btn_control_all.setObjectName("controlBtn")
         self.btn_control_all.clicked.connect(self.toggle_control_all)
         self.btn_control_all.setEnabled(False)
@@ -293,17 +296,27 @@ class MainWindow(QMainWindow):
         self.loading_label.setText(f"Đang quét thiết bị trong mạng{dots}")
 
     def scan_completed(self, devices):
-        self.progress_timer.stop()
-        self.progress_bar.setValue(100)
+        try:
+            self.progress_timer.stop()
+            self.progress_bar.setValue(100)
 
-        QTimer.singleShot(200, self.loading_frame.hide)
+            QTimer.singleShot(200, self.loading_frame.hide)
 
-        self.devices = devices
-        self.status_label.setText('Quét hoàn tất')
-        self.status_label.setStyleSheet("color: #28a745;")
-        self.update_table()
-        self.btn_control.setEnabled(True)
-        self.btn_control_all.setEnabled(True)
+            if not devices:
+                self.status_label.setText('Không tìm thấy thiết bị')
+                self.status_label.setStyleSheet("color: #dc3545;")
+                return
+
+            self.devices = devices
+            self.status_label.setText('Quét hoàn tất')
+            self.status_label.setStyleSheet("color: #28a745;")
+            self.update_table()
+            self.btn_control.setEnabled(True)
+            self.btn_control_all.setEnabled(True)
+        except Exception as e:
+            self.status_label.setText('Lỗi khi quét mạng')
+            self.status_label.setStyleSheet("color: #dc3545;")
+            QMessageBox.critical(self, 'Lỗi', f'Đã xảy ra lỗi: {str(e)}')
 
     def update_table(self):
         self.table.setRowCount(len(self.devices))
@@ -401,10 +414,21 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.control_thread and self.control_thread.isRunning():
-            self.control_thread.stop()
-            self.control_thread.quit()
-            self.control_thread.wait()
-        event.accept()
+            reply = QMessageBox.question(
+                self, 'Xác nhận',
+                'Đang trong quá trình chặn kết nối. Bạn có chắc muốn thoát?',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                self.control_thread.stop()
+                self.control_thread.quit()
+                self.control_thread.wait()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
 
 
 if __name__ == '__main__':
