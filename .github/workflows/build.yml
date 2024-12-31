@@ -1,0 +1,81 @@
+name: Build Executable
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Số phiên bản'
+        required: true
+        default: '1.0.0'
+        type: string
+
+permissions: write-all
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ['3.10']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --add-data "icon.ico;." --name=NetGuardian main.py
+
+      - name: Move executable to root
+        shell: pwsh
+        run: |
+          if (Test-Path "dist/NetGuardian.exe") {
+            Move-Item -Path "dist/NetGuardian.exe" -Destination "NetGuardian.exe" -Force
+          } else {
+            Write-Error "File dist/NetGuardian.exe not found."
+            exit 1
+          }
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetGuardian
+          path: NetGuardian.exe
+
+      - name: Create Release Description
+        id: create_description
+        run: |
+          echo "## NetGuardian Pro" > release_description.txt
+          echo "" >> release_description.txt
+          echo "### Tính năng" >> release_description.txt
+          echo "- Quét và hiển thị tất cả thiết bị trong mạng LAN" >> release_description.txt
+          echo "- Hiển thị thông tin chi tiết của từng thiết bị" >> release_description.txt
+          echo "- Kiểm soát kết nối mạng của từng thiết bị" >> release_description.txt
+          echo "- Chặn/Mở kết nối mạng cho nhiều thiết bị cùng lúc" >> release_description.txt
+          echo "" >> release_description.txt
+          echo "### Lưu ý" >> release_description.txt
+          echo "- Cần chạy với quyền Administrator" >> release_description.txt
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NetGuardian.exe
+          body_path: release_description.txt
+          name: Release v${{ github.event.inputs.version || '1.0.0' }}
+          tag_name: v${{ github.event.inputs.version || '1.0.0' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
